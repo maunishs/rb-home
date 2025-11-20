@@ -134,7 +134,7 @@ export default function NewItemsFromSavedSearch() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            Based on your saved search, here are the new items
+            Based on your saved searches, here are new items
           </h2>
           <button className="text-sm text-gray-900 hover:text-gray-700 font-medium flex items-center space-x-1">
             <span>See all</span>
@@ -166,15 +166,11 @@ export default function NewItemsFromSavedSearch() {
                 className="flex-shrink-0 w-72 group/item cursor-pointer"
               >
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-lg transition-all overflow-hidden">
-                  {/* Image with Discount Badge */}
+                  {/* Image with Badges */}
                   <div className="relative aspect-video bg-orange-100 overflow-hidden">
-                    {/* Discount Badge */}
-                    <div className="absolute top-3 left-3 z-10 bg-red-600 text-white text-sm font-bold px-3 py-1.5 rounded-md shadow-lg">
-                      {item.discountPercent}% OFF
-                    </div>
-                    {/* Price Drop Badge */}
-                    <div className="absolute top-3 right-3 z-10 bg-green-600 text-white text-xs font-semibold px-2.5 py-1 rounded-md shadow-lg">
-                      Price Drop
+                    {/* New Badge */}
+                    <div className="absolute top-3 left-3 z-10 bg-blue-600 text-white text-xs font-semibold px-2.5 py-1 rounded-md shadow-lg">
+                      New
                     </div>
                     {/* Heart Icon */}
                     <button
@@ -201,19 +197,15 @@ export default function NewItemsFromSavedSearch() {
                     </h3>
 
                     {/* Pricing */}
-                    <div className="space-y-1">
-                      {/* Original Price - Strikethrough */}
-                      <p className="text-xs text-gray-500 line-through">
-                        {item.originalPrice}
-                      </p>
+                    <div className="space-y-2">
                       {/* Current Price */}
                       <p className="text-lg font-bold text-gray-900">
                         {item.currentPrice}
                       </p>
-                      {/* Savings */}
-                      <p className="text-xs text-green-600 font-semibold">
-                        Save ${(parseInt(item.originalPrice.replace(/\$|,/g, '')) - parseInt(item.currentPrice.replace(/\$|,/g, ''))).toLocaleString()}
-                      </p>
+                      {/* Great Price Badge */}
+                      <div className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-md">
+                        Great Price
+                      </div>
                     </div>
                   </div>
                 </div>
