@@ -1,9 +1,7 @@
 'use client'
 
 import {
-  MagnifyingGlassIcon,
   UserCircleIcon,
-  ScaleIcon,
   StarIcon,
   BanknotesIcon,
   TruckIcon,
@@ -21,41 +19,27 @@ interface ServiceStep {
 const services: ServiceStep[] = [
   {
     id: '1',
-    title: 'Find Equipment',
-    description: 'Browse thousands of items across 200+ categories',
-    icon: MagnifyingGlassIcon,
-    color: 'bg-orange-100',
-  },
-  {
-    id: '2',
-    title: 'Create an Account',
-    description: 'Start bidding in minutes',
+    title: 'Create Account & Start Bidding',
+    description: 'Sign up in minutes and join auctions starting at $1',
     icon: UserCircleIcon,
     color: 'bg-blue-100',
   },
   {
-    id: '3',
-    title: 'Join the Bidding',
-    description: 'All auctions start at just $1',
-    icon: ScaleIcon,
-    color: 'bg-green-100',
-  },
-  {
-    id: '4',
+    id: '2',
     title: 'Celebrate Your Win',
     description: 'Enjoy the moment of victory',
     icon: StarIcon,
     color: 'bg-yellow-100',
   },
   {
-    id: '5',
+    id: '3',
     title: 'RBFS Financing',
     description: 'Clear and affordable financing options available',
     icon: BanknotesIcon,
     color: 'bg-purple-100',
   },
   {
-    id: '6',
+    id: '4',
     title: 'Veritread Shipping',
     description: "From bidding to delivery, we've got you covered",
     icon: TruckIcon,
@@ -82,7 +66,7 @@ export default function Services() {
         </div>
 
         {/* Service Steps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {services.map((service) => {
             const Icon = service.icon
             return (
