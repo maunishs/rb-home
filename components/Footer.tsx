@@ -237,13 +237,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-
-      {/* Floating Register Button */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all">
-          Register
-        </button>
-      </div>
     </footer>
   )
 }

@@ -66,32 +66,28 @@ export default function RBHeader() {
       year: '2018',
       make: 'Mack',
       model: 'GU713',
-      image:
-        'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=300&h=200&fit=crop',
+      color: 'bg-orange-200',
     },
     {
       id: '2',
       year: '2019',
       make: 'Wacker Neuson',
       model: 'SW24',
-      image:
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop',
+      color: 'bg-blue-200',
     },
     {
       id: '3',
       year: '2019',
       make: 'Caterpillar',
       model: '326FL',
-      image:
-        'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=300&h=200&fit=crop',
+      color: 'bg-green-200',
     },
     {
       id: '4',
       year: '2019',
       make: 'John Deere',
       model: '300G',
-      image:
-        'https://images.unsplash.com/photo-1581091870623-1d2c5a0b2a5b?w=300&h=200&fit=crop',
+      color: 'bg-purple-200',
     },
   ]
   const closingToday = [
@@ -334,12 +330,7 @@ export default function RBHeader() {
                             }
                             className="flex-shrink-0 w-48 group"
                           >
-                            <div className="relative rounded-lg overflow-hidden bg-gray-100 aspect-video mb-2 border border-gray-200 group-hover:border-orange-400 transition-colors">
-                              <img
-                                src={item.image}
-                                alt={`${item.year} ${item.make} ${item.model}`}
-                                className="w-full h-full object-cover"
-                              />
+                            <div className={`relative rounded-lg overflow-hidden ${item.color} aspect-video mb-2 border border-gray-200 group-hover:border-orange-400 transition-colors`}>
                             </div>
                             <p className="text-sm font-medium text-gray-900 text-left">
                               {item.year} {item.make} {item.model}
