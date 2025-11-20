@@ -142,7 +142,7 @@ const MarketingBanner = () => {
             New Equipment Drop
           </h3>
           <p className="text-white/90 text-sm mb-6">
-            Don't miss out on the latest heavy machinery finds.
+            Don&apos;t miss out on the latest heavy machinery finds.
           </p>
         </div>
 

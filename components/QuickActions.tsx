@@ -9,7 +9,7 @@ export default function QuickActions() {
           <h3 className="text-sm font-semibold text-gray-900 mb-2">
             Complete outbid
           </h3>
-          <p className="text-xs text-gray-600">You've been outbid on items</p>
+          <p className="text-xs text-gray-600">You&apos;ve been outbid on items</p>
         </div>
 
         {/* Closing Now */}
