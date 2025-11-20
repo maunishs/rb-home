@@ -21,10 +21,10 @@ const stats: Stat[] = [
     suffix: '',
   },
   {
-    label: 'GTV',
-    value: '45.8',
-    prefix: '$',
-    suffix: 'B',
+    label: 'Total Assets',
+    value: '280000',
+    prefix: '',
+    suffix: '',
   },
 ]
 
@@ -69,9 +69,17 @@ export default function StatsPill() {
     }
 
     // Start from a value close to target (only animate last few digits)
-    const incrementAmount = currentStat.suffix === 'B' ? 0.1 : (numericValue > 1000000 ? 2 : 1)
-    const startValue = numericValue - incrementAmount
-    const target = numericValue
+    // For Total Assets, start from lower end of range and increase
+    let incrementAmount, startValue, target
+    if (currentStat.label === 'Total Assets') {
+      startValue = 200000 // Start from lower end of range
+      target = numericValue // Target is the current value (will increase)
+      incrementAmount = target - startValue
+    } else {
+      incrementAmount = currentStat.suffix === 'B' ? 0.1 : (numericValue > 1000000 ? 2 : 1)
+      startValue = numericValue - incrementAmount
+      target = numericValue
+    }
 
     // Animate only the last few digits (subtle increment)
     const duration = 2000
