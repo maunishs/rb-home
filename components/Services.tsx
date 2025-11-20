@@ -65,11 +65,11 @@ const services: ServiceStep[] = [
 
 export default function Services() {
   return (
-    <div className="bg-white py-12">
+    <div className="bg-white py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
             How it works?
           </h2>
           <a
@@ -82,7 +82,7 @@ export default function Services() {
         </div>
 
         {/* Service Steps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {services.map((service) => {
             const Icon = service.icon
             return (
@@ -92,15 +92,15 @@ export default function Services() {
               >
                 {/* Image Placeholder */}
                 <div className={`${service.color} aspect-video flex items-center justify-center`}>
-                  <Icon className="h-16 w-16 text-gray-700" />
+                  <Icon className="h-8 w-8 text-gray-700" />
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                <div className="p-3">
+                  <h3 className="text-base font-bold text-gray-900 mb-1">
                     {service.title}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs text-gray-600">
                     {service.description}
                   </p>
                 </div>
