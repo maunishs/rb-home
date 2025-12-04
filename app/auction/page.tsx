@@ -309,7 +309,7 @@ export default function AuctionPage() {
                 {/* Buyer's Premium */}
                 <div className="pt-8 border-t border-gray-200">
                   <div className="text-base text-gray-700 leading-relaxed">
-                    <strong className="text-gray-900">Buyer's Premium per Lot:</strong> 25% of the successful bid (minimum <span className="text-red-600 font-semibold">$49</span>) per lot.
+                    <strong className="text-gray-900">Buyer&apos;s Premium per Lot:</strong> 25% of the successful bid (minimum <span className="text-red-600 font-semibold">$49</span>) per lot.
                   </div>
                 </div>
 
@@ -481,12 +481,12 @@ export default function AuctionPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        toggleWatch(item.id)
+                        toggleWatch(String(item.id))
                       }}
                       className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-all"
-                      aria-label={watchedItems.has(item.id) ? 'Remove from watchlist' : 'Add to watchlist'}
+                      aria-label={watchedItems.has(String(item.id)) ? 'Remove from watchlist' : 'Add to watchlist'}
                     >
-                      {watchedItems.has(item.id) ? (
+                      {watchedItems.has(String(item.id)) ? (
                         <HeartIconSolid className="h-4 w-4 text-red-500" />
                       ) : (
                         <HeartIcon className="h-4 w-4 text-gray-600" />
@@ -548,12 +548,12 @@ export default function AuctionPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        toggleWatch(item.id)
+                        toggleWatch(String(item.id))
                       }}
                       className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-all"
-                      aria-label={watchedItems.has(item.id) ? 'Remove from watchlist' : 'Add to watchlist'}
+                      aria-label={watchedItems.has(String(item.id)) ? 'Remove from watchlist' : 'Add to watchlist'}
                     >
-                      {watchedItems.has(item.id) ? (
+                      {watchedItems.has(String(item.id)) ? (
                         <HeartIconSolid className="h-4 w-4 text-red-500" />
                       ) : (
                         <HeartIcon className="h-4 w-4 text-gray-600" />
@@ -608,12 +608,12 @@ export default function AuctionPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        toggleWatch(item.id)
+                        toggleWatch(String(item.id))
                       }}
                       className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-all"
-                      aria-label={watchedItems.has(item.id) ? 'Remove from watchlist' : 'Add to watchlist'}
+                      aria-label={watchedItems.has(String(item.id)) ? 'Remove from watchlist' : 'Add to watchlist'}
                     >
-                      {watchedItems.has(item.id) ? (
+                      {watchedItems.has(String(item.id)) ? (
                         <HeartIconSolid className="h-4 w-4 text-red-500" />
                       ) : (
                         <HeartIcon className="h-4 w-4 text-gray-600" />
