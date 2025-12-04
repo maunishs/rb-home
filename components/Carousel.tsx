@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 
 export default function Carousel() {
+  const router = useRouter()
   const [currentSlide, setCurrentSlide] = useState(0)
   const slides = [
     {
@@ -68,7 +70,10 @@ export default function Carousel() {
             <p className="text-base md:text-lg mb-4 text-gray-700">
               {slides[currentSlide].subtitle}
             </p>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors">
+            <button
+              onClick={() => router.push('/auction')}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
               View Auction
             </button>
           </div>

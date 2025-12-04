@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   ChevronDownIcon,
   BellIcon,
@@ -12,6 +13,7 @@ import {
 import StatsPill from './StatsPill'
 
 export default function RBHeader() {
+  const router = useRouter()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [watchlistOpen, setWatchlistOpen] = useState(false)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -143,7 +145,16 @@ export default function RBHeader() {
 
   const handleSearchClick = (query: string) => {
     setSearchValue(query)
-    inputRef.current?.focus()
+    setIsSearchFocused(false)
+    router.push(`/search?q=${encodeURIComponent(query)}`)
+  }
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (searchValue.trim()) {
+      setIsSearchFocused(false)
+      router.push(`/search?q=${encodeURIComponent(searchValue.trim())}`)
+    }
   }
 
   return (
@@ -263,6 +274,11 @@ export default function RBHeader() {
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchSubmit()
+                  }
+                }}
                 placeholder="Search by category, make, or model"
                 className="flex-1 px-5 py-2.5 text-base border-0 focus:outline-none focus:ring-0 bg-transparent rounded-l-full min-w-0"
               />
@@ -476,6 +492,7 @@ export default function RBHeader() {
               )}
             </div>
             <button
+              onClick={handleSearchSubmit}
               className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-medium transition-colors flex items-center space-x-2 flex-shrink-0 shadow-sm"
               aria-label="Search"
             >
