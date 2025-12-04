@@ -103,6 +103,12 @@ function SearchResultsContent() {
     const statuses: Array<'WINNING' | 'OUTBID' | undefined> = [undefined, undefined, undefined, 'WINNING', 'OUTBID', undefined, undefined, 'WINNING', 'OUTBID', undefined]
     const locations = ['Fort Worth, TX, US', 'Sacramento, CA, USA', 'Dallas, TX, USA', 'Phoenix, AZ, USA', 'Denver, CO, USA']
 
+    // Simple seeded random function for consistent values between server and client
+    const seededRandom = (seed: number) => {
+      const x = Math.sin(seed) * 10000
+      return x - Math.floor(x)
+    }
+
     for (let i = 0; i < 75; i++) {
       const titleIndex = i % titles.length
       const priceIndex = i % prices.length
@@ -110,14 +116,25 @@ function SearchResultsContent() {
       const statusIndex = i % statuses.length
       const locationIndex = i % locations.length
       const lotNumber = String(1000 + i)
-      // Generate random distance between 10 and 2000 miles
-      const distance = Math.floor(Math.random() * 1990) + 10
       
-      // Determine if this item will show "Buy it Now" (on "all" tab, items with id divisible by 3, or non-auction items)
-      const willShowBuyNow = (parseInt(String(i + 1)) % 3 === 0) || Math.random() < 0.3
-      // Randomly assign price signal to some "Buy it Now" items
-      const priceSignal = willShowBuyNow && Math.random() < 0.6 
-        ? (Math.random() < 0.5 ? 'Great Price' : 'Good Price')
+      // Use seeded random for consistent values between server and client
+      const seed1 = i * 7 + 13
+      const seed2 = i * 11 + 17
+      const seed3 = i * 19 + 23
+      const seed4 = i * 31 + 37
+      const seed5 = i * 41 + 43
+      const seed6 = i * 47 + 53
+      const seed7 = i * 59 + 61
+      const seed8 = i * 67 + 71
+      
+      // Generate deterministic distance between 10 and 2000 miles
+      const distance = Math.floor(seededRandom(seed1) * 1990) + 10
+      
+      // Determine if this item will show "Buy it Now" (deterministic)
+      const willShowBuyNow = (parseInt(String(i + 1)) % 3 === 0) || seededRandom(seed2) < 0.3
+      // Deterministically assign price signal to some "Buy it Now" items
+      const priceSignal = willShowBuyNow && seededRandom(seed3) < 0.6 
+        ? (seededRandom(seed4) < 0.5 ? 'Great Price' : 'Good Price')
         : undefined
 
       items.push({
@@ -125,16 +142,16 @@ function SearchResultsContent() {
         title: `${titles[titleIndex]} ${2020 + (i % 4)}`,
         price: prices[priceIndex],
         status: statuses[statusIndex],
-        bids: Math.floor(Math.random() * 50) + 10,
+        bids: Math.floor(seededRandom(seed5) * 50) + 10,
         timeLeft: timeOptions[timeIndex],
         location: locations[locationIndex],
-        hours: `${Math.floor(Math.random() * 1000000).toLocaleString()} hr`,
-        watchCount: Math.floor(Math.random() * 100) + 20,
+        hours: `${Math.floor(seededRandom(seed6) * 1000000).toLocaleString()} hr`,
+        watchCount: Math.floor(seededRandom(seed7) * 100) + 20,
         image: 'bg-blue-200',
         type: 'auction',
         lotNumber,
         estimatedValue: '$321.5k/mo',
-        maxBid: statuses[statusIndex] === 'OUTBID' && i % 3 === 0 ? `$${Math.floor(Math.random() * 10) + 1}k` : undefined,
+        maxBid: statuses[statusIndex] === 'OUTBID' && i % 3 === 0 ? `$${Math.floor(seededRandom(seed8) * 10) + 1}k` : undefined,
         distance,
         priceSignal,
       })
@@ -566,13 +583,19 @@ function SearchResultsContent() {
                           {(() => {
                             const isBuyNow = (activeTab === 'all' && parseInt(item.id) % 3 === 0) || item.type !== 'auction'
                             
-                            // Calculate top offer (85-90% of price) for Buy it Now items
+                            // Calculate top offer (85-90% of price) for Buy it Now items (deterministic)
                             let topOffer = null
                             if (isBuyNow) {
                               const priceStr = item.price.replace(/[^0-9]/g, '')
                               const priceNum = parseInt(priceStr)
                               if (!isNaN(priceNum)) {
-                                const percentage = 0.85 + (Math.random() * 0.05) // Random between 85-90%
+                                // Use item ID as seed for consistent percentage
+                                const seed = parseInt(item.id) * 73 + 79
+                                const seededRandom = (s: number) => {
+                                  const x = Math.sin(s) * 10000
+                                  return x - Math.floor(x)
+                                }
+                                const percentage = 0.85 + (seededRandom(seed) * 0.05) // Deterministic between 85-90%
                                 const topOfferAmount = Math.floor(priceNum * percentage)
                                 topOffer = `$${topOfferAmount.toLocaleString()}`
                               }
