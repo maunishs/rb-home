@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, useMemo } from 'react'
+import { useState, Suspense, useMemo, useRef, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import LiveTicker from '@/components/LiveTicker'
@@ -10,6 +10,8 @@ import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import {
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   HeartIcon,
   FunnelIcon,
   TrophyIcon,
@@ -35,6 +37,162 @@ interface SearchItem {
   maxBid?: string
   distance?: number
   priceSignal?: 'Great Price' | 'Good Price'
+}
+
+// Closing Today Module Component
+function ClosingTodayModule({ items }: { items: SearchItem[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [showLeftArrow, setShowLeftArrow] = useState(false)
+  const [showRightArrow, setShowRightArrow] = useState(true)
+
+  // Filter items closing today (items with short time left - less than 30 minutes)
+  const closingTodayItems = useMemo(() => {
+    return items
+      .filter((item) => {
+        if (!item.timeLeft) return false
+        // Parse time left - items with format like "1m 32s", "2m 15s", etc.
+        const timeMatch = item.timeLeft.match(/(\d+)m\s*(\d+)s/)
+        if (timeMatch) {
+          const minutes = parseInt(timeMatch[1])
+          const seconds = parseInt(timeMatch[2])
+          const totalSeconds = minutes * 60 + seconds
+          // Consider items closing in less than 30 minutes as "closing today"
+          return totalSeconds < 1800
+        }
+        return false
+      })
+      .slice(0, 12) // Limit to 12 items
+  }, [items])
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 320
+      const newScrollLeft =
+        scrollRef.current.scrollLeft +
+        (direction === 'right' ? scrollAmount : -scrollAmount)
+      scrollRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth',
+      })
+    }
+  }
+
+  const checkScrollState = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+      setShowLeftArrow(scrollLeft > 0)
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10)
+    }
+  }
+
+  useEffect(() => {
+    checkScrollState()
+    window.addEventListener('resize', checkScrollState)
+    return () => window.removeEventListener('resize', checkScrollState)
+  }, [closingTodayItems])
+
+  if (closingTodayItems.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="bg-white border-t border-b border-gray-200 py-4 mb-6 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900">Closing Today</h2>
+            <span className="bg-red-100 text-red-700 text-xs font-semibold px-2 py-0.5 rounded-full">ABSOLUTE SALE</span>
+          </div>
+          <button className="text-sm text-orange-600 hover:text-orange-700 font-medium flex items-center space-x-1">
+            <span>See all</span>
+            <ChevronRightIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="relative group">
+          {/* Left Arrow */}
+          {showLeftArrow && (
+            <button
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Scroll left"
+            >
+              <ChevronLeftIcon className="h-6 w-6 text-gray-800" />
+            </button>
+          )}
+
+          {/* Scrollable Container */}
+          <div
+            ref={scrollRef}
+            onScroll={checkScrollState}
+            className="flex overflow-x-auto hide-scrollbar gap-2 pb-2 scroll-smooth"
+          >
+            {closingTodayItems.map((item, index) => {
+              // Deterministically assign price signal if not already present
+              // Use item ID to create consistent assignment between server and client
+              const itemIdNum = parseInt(item.id) || index
+              const seed = itemIdNum * 7 + 13
+              const randomValue = (Math.sin(seed) * 10000) - Math.floor(Math.sin(seed) * 10000)
+              const priceSignal = item.priceSignal || (randomValue < 0.4 ? (randomValue < 0.2 ? 'Great Price' : 'Good Price') : undefined)
+              
+              return (
+                <div
+                  key={item.id}
+                  className="flex-shrink-0 w-32 group/item cursor-pointer"
+                >
+                  <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-lg transition-all overflow-hidden">
+                    {/* Image */}
+                    <div className="relative aspect-video overflow-hidden" style={{ backgroundColor: '#F3F4F6' }}>
+                      {/* Price Signal Badge */}
+                      {priceSignal && (
+                        <div className={`absolute top-1 left-1 z-10 text-white text-[10px] font-semibold px-1 py-0.5 rounded shadow-lg ${
+                          priceSignal === 'Great Price' ? 'bg-green-600' : 'bg-orange-600'
+                        }`}>
+                          {priceSignal}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-2">
+                      {/* Title */}
+                      <h3 className="text-xs font-semibold text-gray-900 mb-1 line-clamp-2 leading-tight min-h-[2rem]">
+                        {item.title}
+                      </h3>
+
+                      {/* Price */}
+                      <p className="text-sm font-bold text-gray-900 mb-1">
+                        {item.price}
+                      </p>
+
+                      {/* Time Left and Location */}
+                      <div className="flex flex-col gap-0.5 text-[10px] text-gray-600">
+                        {item.timeLeft && (
+                          <span className="font-medium text-red-600">⏱ {item.timeLeft}</span>
+                        )}
+                        <span className="truncate">{item.location}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Right Arrow */}
+          {showRightArrow && (
+            <button
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Scroll right"
+            >
+              <ChevronRightIcon className="h-6 w-6 text-gray-800" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function SearchResultsContent() {
@@ -312,6 +470,9 @@ function SearchResultsContent() {
       <CategoryPills />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Closing Today Module */}
+        <ClosingTodayModule items={allSearchResults} />
+
         {/* Related Searches */}
         <div className="mb-6">
           <div className="flex items-center gap-3 flex-wrap">
