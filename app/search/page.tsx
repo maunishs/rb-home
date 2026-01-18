@@ -145,8 +145,10 @@ function ClosingTodayModule({ items }: { items: SearchItem[] }) {
                     <div className="relative aspect-video overflow-hidden" style={{ backgroundColor: '#F3F4F6' }}>
                       {/* Price Signal Badge */}
                       {priceSignal && (
-                        <div className={`absolute top-1 left-1 z-10 text-white text-[10px] font-semibold px-1 py-0.5 rounded shadow-lg ${
-                          priceSignal === 'Great Price' ? 'bg-green-600' : 'bg-orange-600'
+                        <div className={`absolute top-1 left-1 z-10 text-[10px] font-semibold px-1 py-0.5 rounded ${
+                          priceSignal === 'Great Price' 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-blue-100 text-blue-700'
                         }`}>
                           {priceSignal}
                         </div>
