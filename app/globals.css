@@ -47,3 +47,32 @@ body {
 .animate-ticker-scroll {
   animation: ticker-scroll 30s linear infinite;
 }
+
+/* Hot item heart animation */
+@keyframes heart-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
+}
+
+.animate-heart-pulse {
+  animation: heart-pulse 2s ease-in-out infinite;
+}
+
+@keyframes heart-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8));
+  }
+}
+
+.animate-heart-glow {
+  animation: heart-glow 2s ease-in-out infinite;
+}

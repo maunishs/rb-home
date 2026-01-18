@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import LiveTicker from '@/components/LiveTicker'
@@ -12,6 +12,7 @@ import {
   ChevronDownIcon,
   HeartIcon,
   FunnelIcon,
+  TrophyIcon,
 } from '@heroicons/react/24/outline'
 import {
   HeartIcon as HeartIconSolid,
@@ -46,12 +47,30 @@ function SearchResultsContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 60
   const [filtersOpen, setFiltersOpen] = useState({
-    location: true,
-    buyingFormat: true,
-    categories: true,
-    make: true,
-    price: true,
-    meter: true,
+    recentSearch: false,
+    quickFilters: true,
+    location: false,
+    buyingFormat: false,
+    categories: false,
+    make: false,
+    model: false,
+    price: false,
+    meter: false,
+  })
+  const [selectedFilters, setSelectedFilters] = useState({
+    recentSearch: [] as string[],
+    reserveMet: false,
+    closingToday: false,
+    absoluteSale: false,
+    greatPrice: false,
+    goodPrice: false,
+    location: 'Within 25 mi',
+    buyingFormat: 'All',
+    categories: [] as string[],
+    make: ['Bergmann'] as string[],
+    model: [] as string[],
+    price: [] as string[],
+    meter: [] as string[],
   })
 
   const toggleWatch = (itemId: string) => {
@@ -137,6 +156,17 @@ function SearchResultsContent() {
         ? (seededRandom(seed4) < 0.5 ? 'Great Price' : 'Good Price')
         : undefined
 
+      // Calculate estimated monthly value as 1/40 of the price
+      const priceStr = prices[priceIndex]
+      const priceNum = parseInt(priceStr.replace(/[^0-9]/g, ''))
+      const monthlyEstimate = priceNum / 40
+      let formattedMonthly: string
+      if (monthlyEstimate >= 1000) {
+        formattedMonthly = `$${(monthlyEstimate / 1000).toFixed(1)}k/mo`
+      } else {
+        formattedMonthly = `$${Math.round(monthlyEstimate).toLocaleString()}/mo`
+      }
+
       items.push({
         id: String(i + 1),
         title: `${titles[titleIndex]} ${2020 + (i % 4)}`,
@@ -146,11 +176,11 @@ function SearchResultsContent() {
         timeLeft: timeOptions[timeIndex],
         location: locations[locationIndex],
         hours: `${Math.floor(seededRandom(seed6) * 1000000).toLocaleString()} hr`,
-        watchCount: Math.floor(seededRandom(seed7) * 100) + 20,
+        watchCount: Math.floor(seededRandom(seed7) * 120) + 5, // Range: 5-125, so some items will have >20
         image: 'bg-blue-200',
         type: 'auction',
         lotNumber,
-        estimatedValue: '$321.5k/mo',
+        estimatedValue: formattedMonthly,
         maxBid: statuses[statusIndex] === 'OUTBID' && i % 3 === 0 ? `$${Math.floor(seededRandom(seed8) * 10) + 1}k` : undefined,
         distance,
         priceSignal,
@@ -160,15 +190,109 @@ function SearchResultsContent() {
     return items
   }
 
-  const allSearchResults = generateItems()
+  const allSearchResults = useMemo(() => generateItems(), [])
+
+  // Helper function to generate random counts based on item index
+  const getCountForFilter = (filterValue: string, filterType: string, totalItems: number): number => {
+    // Use a seeded random based on filter value to get consistent counts
+    const seed = filterValue.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const random = Math.abs(Math.sin(seed)) * 100
+    // Return a count between 5% and 40% of total items, with some variation
+    const baseCount = Math.floor(totalItems * (0.05 + (random % 0.35)))
+    return Math.max(1, baseCount + Math.floor(random % 20))
+  }
+
+  // Calculate counts for each filter option
+  const getLocationCount = (location: string) => {
+    if (location === 'All') return allSearchResults.length
+    const seed = location.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    return Math.floor(allSearchResults.length * (0.2 + (Math.abs(Math.sin(seed)) % 0.3)))
+  }
+
+  const getBuyingFormatCount = (format: string) => {
+    if (format === 'All') return allSearchResults.length
+    // Auction vs Buy It Now split
+    const auctionCount = Math.floor(allSearchResults.length * 0.65)
+    return format === 'Auction' ? auctionCount : allSearchResults.length - auctionCount
+  }
+
+  const getCategoryCount = (category: string) => {
+    return getCountForFilter(category, 'category', allSearchResults.length)
+  }
+
+  const getMakeCount = (make: string) => {
+    return getCountForFilter(make, 'make', allSearchResults.length)
+  }
+
+  const getPriceCount = (priceRange: string) => {
+    return getCountForFilter(priceRange, 'price', allSearchResults.length)
+  }
+
+  const getMeterCount = (meterRange: string) => {
+    return getCountForFilter(meterRange, 'meter', allSearchResults.length)
+  }
+
+  const getRecentSearchCount = (searchTerm: string) => {
+    return getCountForFilter(searchTerm, 'recentSearch', allSearchResults.length)
+  }
+
+  const getReserveMetCount = () => {
+    return Math.floor(allSearchResults.length * 0.25)
+  }
+
+  const getClosingTodayCount = () => {
+    return Math.floor(allSearchResults.length * 0.15)
+  }
+
+  const getAbsoluteSaleCount = () => {
+    return Math.floor(allSearchResults.length * 0.35)
+  }
+
+  const getGreatPriceCount = () => {
+    return Math.floor(allSearchResults.length * 0.20)
+  }
+
+  const getGoodPriceCount = () => {
+    return Math.floor(allSearchResults.length * 0.30)
+  }
+
   const totalPages = Math.ceil(allSearchResults.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const searchResults = allSearchResults.slice(startIndex, endIndex)
 
-  const makes = ['Freightliner', 'Kenworth', 'Ford', 'Peterbilt', 'Volvo', 'Mack']
+  const makes = ['Ashland', 'Allu', 'Bergmann', 'Case', 'Caterpillar', 'Ford']
   const categories = ['Truck Tractors', 'Van Trucks', 'Dump Trucks', 'Service and Utility Trucks']
   const selectedMakes = ['Freightliner']
+
+  // Model mappings for each make
+  const makeToModels: Record<string, string[]> = {
+    'Ashland': ['AS-200', 'AS-300', 'AS-400', 'AS-500'],
+    'Allu': ['AL-100', 'AL-200', 'AL-300', 'AL-400'],
+    'Bergmann': ['BG-150', 'BG-250', 'BG-350', 'BG-450'],
+    'Case': ['580N', '590N', '750N', '850N'],
+    'Caterpillar': ['336F', '336FL', '950M', '326FL', '262D3', '272D3'],
+    'Ford': ['F-150', 'F-250', 'F-350', 'F-450'],
+  }
+
+  // Get available models based on selected makes
+  const getAvailableModels = (): string[] => {
+    if (selectedFilters.make.length === 0) {
+      return []
+    }
+    const models = new Set<string>()
+    selectedFilters.make.forEach((make) => {
+      const makeModels = makeToModels[make] || []
+      makeModels.forEach((model) => models.add(model))
+    })
+    return Array.from(models).sort()
+  }
+
+  const availableModels = getAvailableModels()
+
+  const getModelCount = (model: string) => {
+    return getCountForFilter(model, 'model', allSearchResults.length)
+  }
 
   const relatedSearches = [
     'excavator 2023',
@@ -207,10 +331,144 @@ function SearchResultsContent() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar - Filters */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-24">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto hide-scrollbar" style={{ scrollBehavior: 'smooth' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Filters</h3>
                 <button className="text-sm text-blue-600 hover:text-blue-700">Clear all</button>
+              </div>
+
+              {/* Recent Search Filter */}
+              <div className="border-b border-gray-200 pb-4 mb-4">
+                <button
+                  onClick={() => setFiltersOpen({ ...filtersOpen, recentSearch: !filtersOpen.recentSearch })}
+                  className="w-full flex items-center justify-between text-sm font-medium text-gray-900 mb-2"
+                >
+                  <span>Recent Search</span>
+                  <ChevronDownIcon
+                    className={`h-4 w-4 transition-transform ${filtersOpen.recentSearch ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                {filtersOpen.recentSearch && (
+                  <div className="space-y-2 mt-2">
+                    {['Excavator', 'Caterpillar', 'Skid Steer', 'Loader', 'Dozer'].map((searchTerm) => {
+                      const count = getRecentSearchCount(searchTerm)
+                      const isChecked = selectedFilters.recentSearch.includes(searchTerm)
+                      return (
+                        <label key={searchTerm} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  recentSearch: [...selectedFilters.recentSearch, searchTerm],
+                                })
+                              } else {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  recentSearch: selectedFilters.recentSearch.filter((s) => s !== searchTerm),
+                                })
+                              }
+                            }}
+                            className="text-orange-600"
+                          />
+                          <span className="text-sm text-gray-700">{searchTerm} ({count})</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Filters */}
+              <div className="border-b border-orange-200 pb-4 mb-4 bg-orange-50 rounded-lg p-3 -mx-1">
+                <button
+                  onClick={() => setFiltersOpen({ ...filtersOpen, quickFilters: !filtersOpen.quickFilters })}
+                  className="w-full flex items-center justify-between text-sm font-semibold text-gray-900 mb-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Quick Filters</span>
+                    <span className="px-2 py-0.5 bg-orange-600 text-white text-xs font-bold rounded-full">POPULAR</span>
+                  </div>
+                  <ChevronDownIcon
+                    className={`h-4 w-4 transition-transform ${filtersOpen.quickFilters ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                {filtersOpen.quickFilters && (
+                  <div className="space-y-2 mt-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedFilters.reserveMet}
+                        onChange={(e) => {
+                          setSelectedFilters({
+                            ...selectedFilters,
+                            reserveMet: e.target.checked,
+                          })
+                        }}
+                        className="text-orange-600"
+                      />
+                      <span className="text-sm text-gray-700">Reserve Met ({getReserveMetCount()})</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedFilters.closingToday}
+                        onChange={(e) => {
+                          setSelectedFilters({
+                            ...selectedFilters,
+                            closingToday: e.target.checked,
+                          })
+                        }}
+                        className="text-orange-600"
+                      />
+                      <span className="text-sm text-gray-700">Closing Today ({getClosingTodayCount()})</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedFilters.absoluteSale}
+                        onChange={(e) => {
+                          setSelectedFilters({
+                            ...selectedFilters,
+                            absoluteSale: e.target.checked,
+                          })
+                        }}
+                        className="text-orange-600"
+                      />
+                      <span className="text-sm text-gray-700">Absolute Sale ({getAbsoluteSaleCount()})</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedFilters.greatPrice}
+                        onChange={(e) => {
+                          setSelectedFilters({
+                            ...selectedFilters,
+                            greatPrice: e.target.checked,
+                          })
+                        }}
+                        className="text-orange-600"
+                      />
+                      <span className="text-sm text-gray-700">Great Price ({getGreatPriceCount()})</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedFilters.goodPrice}
+                        onChange={(e) => {
+                          setSelectedFilters({
+                            ...selectedFilters,
+                            goodPrice: e.target.checked,
+                          })
+                        }}
+                        className="text-orange-600"
+                      />
+                      <span className="text-sm text-gray-700">Good Price ({getGoodPriceCount()})</span>
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Location Filter */}
@@ -226,18 +484,22 @@ function SearchResultsContent() {
                 </button>
                 {filtersOpen.location && (
                   <div className="space-y-2 mt-2">
-                    {['All', 'Within 25 mi', 'US Only', 'North America'].map((option) => (
-                      <label key={option} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="location"
-                          value={option}
-                          defaultChecked={option === 'Within 25 mi'}
-                          className="text-orange-600"
-                        />
-                        <span className="text-sm text-gray-700">{option}</span>
-                      </label>
-                    ))}
+                    {['All', 'Within 25 mi', 'US Only', 'North America'].map((option) => {
+                      const count = getLocationCount(option)
+                      return (
+                        <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="location"
+                            value={option}
+                            defaultChecked={option === 'Within 25 mi'}
+                            onChange={() => setSelectedFilters({ ...selectedFilters, location: option })}
+                            className="text-orange-600"
+                          />
+                          <span className="text-sm text-gray-700">{option} ({count})</span>
+                        </label>
+                      )
+                    })}
                     <button className="text-sm text-blue-600 hover:text-blue-700 mt-2">See More</button>
                   </div>
                 )}
@@ -258,18 +520,22 @@ function SearchResultsContent() {
                 </button>
                 {filtersOpen.buyingFormat && (
                   <div className="space-y-2 mt-2">
-                    {['All', 'Auction', 'Buy It Now'].map((option) => (
-                      <label key={option} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="buyingFormat"
-                          value={option}
-                          defaultChecked={option === 'All'}
-                          className="text-orange-600"
-                        />
-                        <span className="text-sm text-gray-700">{option}</span>
-                      </label>
-                    ))}
+                    {['All', 'Auction', 'Buy It Now'].map((option) => {
+                      const count = getBuyingFormatCount(option)
+                      return (
+                        <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="buyingFormat"
+                            value={option}
+                            defaultChecked={option === 'All'}
+                            onChange={() => setSelectedFilters({ ...selectedFilters, buyingFormat: option })}
+                            className="text-orange-600"
+                          />
+                          <span className="text-sm text-gray-700">{option} ({count})</span>
+                        </label>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -289,12 +555,33 @@ function SearchResultsContent() {
                 </button>
                 {filtersOpen.categories && (
                   <div className="space-y-2 mt-2">
-                    {categories.map((category) => (
-                      <label key={category} className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="text-orange-600" />
-                        <span className="text-sm text-gray-700">{category}</span>
-                      </label>
-                    ))}
+                    {categories.map((category) => {
+                      const count = getCategoryCount(category)
+                      const isChecked = selectedFilters.categories.includes(category)
+                      return (
+                        <label key={category} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  categories: [...selectedFilters.categories, category],
+                                })
+                              } else {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  categories: selectedFilters.categories.filter((c) => c !== category),
+                                })
+                              }
+                            }}
+                            className="text-orange-600"
+                          />
+                          <span className="text-sm text-gray-700">{category} ({count})</span>
+                        </label>
+                      )
+                    })}
                     <button className="text-sm text-blue-600 hover:text-blue-700 mt-2">See More</button>
                   </div>
                 )}
@@ -313,17 +600,92 @@ function SearchResultsContent() {
                 </button>
                 {filtersOpen.make && (
                   <div className="space-y-2 mt-2">
-                    {['Ashland', 'Allu', 'Bergmann', 'Case', 'Caterpillar', 'Ford'].map((make) => (
-                      <label key={make} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          defaultChecked={make === 'Bergmann'}
-                          className="text-orange-600"
-                        />
-                        <span className="text-sm text-gray-700">{make}</span>
-                      </label>
-                    ))}
+                    {makes.map((make) => {
+                      const count = getMakeCount(make)
+                      const isChecked = selectedFilters.make.includes(make)
+                      return (
+                        <label key={make} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  make: [...selectedFilters.make, make],
+                                })
+                              } else {
+                                const newSelectedMakes = selectedFilters.make.filter((m) => m !== make)
+                                // Remove models that are no longer available after deselecting this make
+                                const modelsForRemovedMake = makeToModels[make] || []
+                                const newSelectedModels = selectedFilters.model.filter(
+                                  (model) => !modelsForRemovedMake.includes(model)
+                                )
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  make: newSelectedMakes,
+                                  model: newSelectedModels,
+                                })
+                              }
+                            }}
+                            className="text-orange-600"
+                          />
+                          <span className="text-sm text-gray-700">{make} ({count})</span>
+                        </label>
+                      )
+                    })}
                     <button className="text-sm text-blue-600 hover:text-blue-700 mt-2">See More</button>
+                  </div>
+                )}
+              </div>
+
+              {/* Model Filter */}
+              <div className="border-b border-gray-200 pb-4 mb-4">
+                <button
+                  onClick={() => setFiltersOpen({ ...filtersOpen, model: !filtersOpen.model })}
+                  className="w-full flex items-center justify-between text-sm font-medium text-gray-900 mb-2"
+                >
+                  <span>Model</span>
+                  <ChevronDownIcon
+                    className={`h-4 w-4 transition-transform ${filtersOpen.model ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                {filtersOpen.model && (
+                  <div className="space-y-2 mt-2">
+                    {availableModels.length > 0 ? (
+                      availableModels.map((model) => {
+                        const count = getModelCount(model)
+                        const isChecked = selectedFilters.model.includes(model)
+                        return (
+                          <label key={model} className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedFilters({
+                                    ...selectedFilters,
+                                    model: [...selectedFilters.model, model],
+                                  })
+                                } else {
+                                  setSelectedFilters({
+                                    ...selectedFilters,
+                                    model: selectedFilters.model.filter((m) => m !== model),
+                                  })
+                                }
+                              }}
+                              className="text-orange-600"
+                            />
+                            <span className="text-sm text-gray-700">{model} ({count})</span>
+                          </label>
+                        )
+                      })
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">Select a make to see models</p>
+                    )}
+                    {availableModels.length > 0 && (
+                      <button className="text-sm text-blue-600 hover:text-blue-700 mt-2">See More</button>
+                    )}
                   </div>
                 )}
               </div>
@@ -341,12 +703,33 @@ function SearchResultsContent() {
                 </button>
                 {filtersOpen.price && (
                   <div className="space-y-2 mt-2">
-                    {['Under $10,000', '$10,000 - $20,000', 'Over $20,000'].map((option) => (
-                      <label key={option} className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="text-orange-600" />
-                        <span className="text-sm text-gray-700">{option}</span>
-                      </label>
-                    ))}
+                    {['Under $10,000', '$10,000 - $20,000', 'Over $20,000'].map((option) => {
+                      const count = getPriceCount(option)
+                      const isChecked = selectedFilters.price.includes(option)
+                      return (
+                        <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  price: [...selectedFilters.price, option],
+                                })
+                              } else {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  price: selectedFilters.price.filter((p) => p !== option),
+                                })
+                              }
+                            }}
+                            className="text-orange-600"
+                          />
+                          <span className="text-sm text-gray-700">{option} ({count})</span>
+                        </label>
+                      )
+                    })}
                     <div className="flex items-center gap-2 mt-3">
                       <input
                         type="text"
@@ -380,12 +763,33 @@ function SearchResultsContent() {
                 </button>
                 {filtersOpen.meter && (
                   <div className="space-y-2 mt-2">
-                    {['Under 1,000 mi', '1,001 mi - 5,000 mi'].map((option) => (
-                      <label key={option} className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="text-orange-600" />
-                        <span className="text-sm text-gray-700">{option}</span>
-                      </label>
-                    ))}
+                    {['Under 1,000 mi', '1,001 mi - 5,000 mi'].map((option) => {
+                      const count = getMeterCount(option)
+                      const isChecked = selectedFilters.meter.includes(option)
+                      return (
+                        <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  meter: [...selectedFilters.meter, option],
+                                })
+                              } else {
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  meter: selectedFilters.meter.filter((m) => m !== option),
+                                })
+                              }
+                            }}
+                            className="text-orange-600"
+                          />
+                          <span className="text-sm text-gray-700">{option} ({count})</span>
+                        </label>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -467,7 +871,7 @@ function SearchResultsContent() {
                     className={`relative flex-shrink-0 ${
                       viewMode === 'list' ? 'w-32 h-24' : 'aspect-video'
                     } overflow-hidden rounded`}
-                    style={{ backgroundColor: '#FFEDD5' }}
+                    style={{ backgroundColor: '#F3F4F6' }}
                   >
                     {/* Status Badge - Only show for auction items, not Buy it Now */}
                     {item.status && !isBuyNow && (
@@ -482,27 +886,28 @@ function SearchResultsContent() {
                       </div>
                     )}
 
-                    {/* Heart Icon */}
+                    {/* Heart Icon with Watch Count */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         toggleWatch(item.id)
                       }}
-                      className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-all"
+                      className="absolute top-2 right-2 z-10 flex flex-col items-center gap-0.5 p-1.5 rounded-lg bg-white/90 hover:bg-white shadow-sm transition-all"
                     >
                       {watchedItems.has(item.id) ? (
                         <HeartIconSolid className="h-4 w-4 text-red-500" />
+                      ) : item.watchCount > 20 ? (
+                        <HeartIcon className="h-4 w-4 text-red-500 animate-heart-glow" />
                       ) : (
                         <HeartIcon className="h-4 w-4 text-gray-600" />
                       )}
+                      {item.watchCount > 0 && (
+                        <span className="text-[10px] font-semibold text-gray-700 leading-none">
+                          {item.watchCount}
+                        </span>
+                      )}
                     </button>
 
-                    {/* RB Logo */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-white/20">RB</div>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Content - List View */}
@@ -604,9 +1009,9 @@ function SearchResultsContent() {
                             return (
                               <>
                                 {isBuyNow && topOffer && (
-                                  <div className="text-xs text-gray-600 text-right mb-1">
-                                    <div className="font-medium text-gray-700">Top offer</div>
-                                    <div className="text-gray-500">{topOffer}</div>
+                                  <div className="text-xs text-gray-600 text-right mb-1 flex items-center justify-end gap-1">
+                                    <TrophyIcon className="h-3.5 w-3.5 text-orange-600" />
+                                    <span className="text-gray-500">{topOffer}</span>
                                   </div>
                                 )}
                                 <button
